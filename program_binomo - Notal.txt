@@ -1,0 +1,1593 @@
+{TUBES DASPRO}
+
+{Assyifa Nurfadilah - 16521029}
+{Muhamad Aji Wibisono - 16521119}
+{Pinaka Kusumaningtyas - 16521317}
+{Achmad Kabir Rifa'i - 16521371}
+
+{PROGRAM marketplace_game_bnmo}
+{Spesifikasi dapat diakses melalui https://docs.google.com/document/d/1mqODeKIMLjvRmoUb_XQPK7pOifJb-rma83bMuqE9C1s/edit}
+{Beberapa spesifikasi diberi fitur tambahan}
+
+
+{Fungsi dan prosedur}
+import argparse
+import os
+import time
+
+{Parser csv}
+{Spesifikasi parser tidak komplit notasi algoritmanya}
+
+
+function jumlahKategori(arrayCSV: array of character) -> integer
+{menghitung jumlah kategori csv}
+{fungsi antara parsedCsv, gak guna di luar itu}
+
+    i : integer
+    kategori : integer
+
+    kategori <- 1
+    i <- 0
+    while arrayCSV[i] /= '\n' do
+        if arrayCSV[i] = ',' then
+            kategori <- kategori + 1
+        i <- i + 1
+    -> kategori
+
+function jumlahData(arrayCSV: array of character) -> integer
+{menghitung jumlah data csv (termasuk kategorial)}
+{fungsi antara parsedCsv, gak guna di luar itu}
+
+    jumlahData : integer
+
+    jumlahData <- 0
+    i traversal [1..panjangArray(arrayCSV)]
+        if arrayCSV[i] = '\n' then
+            jumlahData <- jumlahData + 1
+    -> jumlahData
+
+function parsedCsv(csv)
+{membaca csv sebagai array}
+{menutup csv secara otomatis}
+    arrayCsv <- csv.read()
+    csv.close()
+
+    kategori <- jumlahKategori(arrayCsv)
+    Data <- jumlahData(arrayCsv)
+    matriks <- [[0 for i in range(kategori)] for i in range(Data)]
+
+    aksesData <- 0
+    marker <- 0
+    i travversal [1..Data]
+
+        temporary <- ''
+        comma <- 0
+        while True
+            if arrayCsv[marker] = ',' then
+                matriks[aksesData][comma] <- temporary
+                comma <- comma + 1
+                temporary <- ''
+
+            else if arrayCsv[marker] = '\n' then
+                matriks[aksesData][comma] <- temporary
+                comma <- comma + 1
+                temporary <- ''
+
+                marker <- marker + 1
+                break
+
+            else
+                temporary <- temporary + arrayCsv[marker]
+
+            marker <- marker + 1
+
+        aksesData <- aksesData + 1
+    -> matriks
+
+function arrayToCsv(array : array of array of string) -> string
+
+    temp : string
+
+    temp <- ''
+    i traversal [1..panjangArray(array)]
+        j traversal [1..panjangArray(array[i])]
+            k traversal [1..panjangArray(array[i][j])]
+                temp <- temp + str(array[i][j][k])
+            if not j = panjangArray(array[i])-1 then
+                temp <- temp + ','
+        temp <- temp + '\n'
+    -> temp
+
+
+{Dari sini kebawah dianggap csv sudah diparser berubah menjadi array biasa}
+function panjangArray(array : array of integer/array of string) -> integer
+{pengganti len()}
+    panjang <- 0
+    for i in array
+        panjang <- panjang + 1
+    -> panjang
+
+function adaDiArray(array : array of integer/array of string, anggota : string/integer) -> bool
+{pengganti boolean (anggota) in (array)}
+
+    panjang : integer
+    ada : bool
+
+    panjang <- panjangArray(array)
+    ada <- False
+    i traversal [1..panjang]
+        if array[i] = anggota then
+            ada <- True
+    -> ada
+
+function urutanDiArray(array : array of integer/array of string, anggota : integer/string) -> integer
+{mencari urutan anggota di array, anggota harus diverifikasi ada}
+
+    i : integer
+
+    i <- 1
+    repeat
+        if anggota = array[i] then
+            lokasi <- i
+        else
+            i <- i+1
+    until anggota = array[i] or i > panjangArray(array)
+    -> lokasi
+
+function kodeKategori(array : array of array of string, namaKategori : string) -> integer
+{mengembalikan index kategori berdasarkan namanya}
+
+    markerKategori : integer
+
+    i traversal [1..panjangArray(array[1])]
+        if namaKategori = array[1][i] then
+            markerKategori <- i
+    -> markerKategori
+
+function kolom(array : array of array of string, namaKategori) -> array of string
+{mengembalikan satu kolom berdasarkan kategori array}
+
+    arrayKolom : array [1..panjangArray(array)] of string
+
+    i traversal [1..panjangArray(array)]
+        arrayKolom[i] <- array[i][kodeKategori(array, namaKategori)]
+    
+    -> arrayKolom
+
+function salin(array : array of array of string) -> array of array of string
+{membuat salinan suatu array}
+
+    kategori : integer
+    baris : integer
+    arrayBaru : array [1..baris] of array [1..kategori] of string
+
+    kategori <- panjangArray(array[1])
+    baris <- panjangArray(array)
+
+    i traversal [1..baris]
+        j traversal [1..kategori]
+            arrayBaru[i][j] <- array[i][j]
+    
+    -> arrayBaru
+
+function kalimat2Lebih(kalimat1 : array of character, kalimat2 : array of character) -> bool
+{True kalau kalimat2 harus keluar lebih awal dari kalimat1}
+{Fungsinya untuk sorting huruf}
+
+    ya : bool
+    mentok : bool
+    limit : integer
+
+    ya <- False
+    if kalimat1 = kalimat2 then
+        ya <- False
+    else
+        if panjangArray(kalimat1) > panjangArray(kalimat2) then
+            limit <- panjangArray(kalimat2)
+        else
+            limit <- panjangArray(kalimat1)
+        
+        i traversal [1..limit]
+            mentok <- False
+            if i = limit - 1 then
+                mentok <- True
+
+            if kalimat1[i] = kalimat2[i] then
+                pass
+
+            else if (ord(kalimat1[i]) >= 65 and ord(kalimat1[i]) <= 90) or (ord(kalimat1[i]) - 32 >= 65 and ord(kalimat1[i]) - 32 <= 90) then
+                if (ord(kalimat1[i]) - 32 >= 65 and ord(kalimat1[i]) - 32 <= 90) then
+                    urutan1 <- ord(kalimat1[i]) - 32
+                else
+                    urutan1 <- ord(kalimat1[i])
+
+                if (ord(kalimat2[i]) >= 65 and ord(kalimat2[i]) <= 90) or (ord(kalimat2[i]) - 32 >= 65 and ord(kalimat2[i]) - 32 <= 90) then
+                    if (ord(kalimat2[i]) - 32 >= 65 and ord(kalimat2[i]) - 32 <= 90) then
+                        urutan2 <- ord(kalimat2[i]) - 32
+                    else
+                        urutan2 <- ord(kalimat2[i])
+
+                    if urutan2 < urutan1 then
+                        ya <- True
+                        break
+                    else if urutan2 > urutan1 then
+                        ya <- False
+                        break
+                    
+                else
+                    ya <- True
+                    break
+            
+            else if (ord(kalimat1[i]) >= 48 and ord(kalimat1[i]) <= 57) then
+                if (ord(kalimat2[i]) >= 65 and ord(kalimat2[i]) <= 90) or (ord(kalimat2[i]) - 32 >= 65 and ord(kalimat2[i]) - 32 <= 90) then
+                    ya <- False
+                    break
+                else if (ord(kalimat2[i]) >= 48 and ord(kalimat2[i]) <= 57) then
+
+                    if ord(kalimat1[i]) > ord(kalimat2[i]) then
+                        ya <- True
+                        break
+                    else if ord(kalimat1[i]) < ord(kalimat2[i]) then
+                        ya <- False
+                        break
+
+                else
+                    ya <- True
+                    break
+                
+            else
+                ya <- False
+                break
+
+        if mentok = True and panjangArray(kalimat2) < panjangArray(kalimat1) then
+            ya <- True
+
+    -> ya
+
+function sortKategoriAngka(array : array of array of string, namaKategori : string, cara : character) -> array of array of string 
+{sorting array, pastikan kategori isinya angka semua}
+{sorting dilakukan dengan cara bubblesort}
+
+    array : array of array of string
+    cacheSwap : array of string
+    kategori : integer
+    swap : bool
+
+    array <- salin(array)
+    kategori <- kodeKategori(array, namaKategori)
+
+    if cara = '+' then
+        swap <- True
+        while swap = True do
+            swap <- False
+            i traversal [2..panjangArray(array)-1]
+                if float(angka(array[i][kategori])) > float(angka(array[i+1][kategori])) then
+                    cacheSwap <- array[i]
+
+                    array[i] <- array[i+1]
+                    array[i+1] <- cacheSwap
+
+                    swap <- True
+
+    else cara = '-'
+        swap <- True
+        while swap = True do
+            swap <- False
+            i traversal [2..panjangArray(array)-1]
+                if float(angka(array[i][kategori])) < float(angka(array[i+1][kategori])) then
+                    cacheSwap <- array[i]
+
+                    array[i] <- array[i+1]
+                    array[i+1] <- cacheSwap
+
+                    swap <- True
+
+    -> array
+
+function sortKategoriHuruf(array : array of array of string, namaKategori : string, cara : character) -> array of array of string 
+{sorting array, pastikan kategori isinya huruf semua}
+{sorting dilakukan dengan cara bubblesort}
+
+    array : array of array of string
+    cacheSwap : array of string
+    kategori : integer
+    swap : bool
+
+    array <- salin(array)
+    kategori <- kodeKategori(array, namaKategori)
+
+    if cara = '+' then
+        swap <- True
+        while swap = True do
+            swap <- False
+            i traversal [2..panjangArray(array)-1]
+                if kalimat2Lebih(array[i][kategori], array[i+1][kategori])
+                    cacheSwap <- array[i]
+
+                    array[i] <- array[i+1]
+                    array[i+1] <- cacheSwap
+
+                    swap <- True
+
+    else cara = '-'
+        swap <- True
+        while swap = True do
+            swap <- False
+            i traversal [2..panjangArray(array)-1]
+                if not kalimat2Lebih(array[i][kategori], array[i+1][kategori]) then
+                    if array[i][kategori] == array[i+1][kategori] then
+                        pass
+                    else
+                        cacheSwap <- array[i][kategori]
+
+                        array[i][kategori] <- array[i+1][kategori]
+                        array[i+1][kategori] <- cacheSwap
+
+                        swap <- True
+
+    -> array
+
+function cariKategori(array : array of array of string, namaKategori : string, namaJenis : string) -> array of array of string
+{mengembalikan array berdasarkan satu jenis kolom yang berisi kategori(misal dalam game kategori  rpg)}
+
+    kategori : integer
+    panjangArrayBaru : integer
+    indeksArrayBaru : integer
+    arrayBaru <- array [1..panjangArrayBaru] of string
+
+    kategori <- kodeKategori(array, namaKategori)
+
+    if angkaSemua(namaJenis) and (namaKategori = 'harga' or namaKategori = 'saldo') then
+        namaJenis <- tambahTitikHarga(namaJenis)
+
+    panjangArrayBaru <- 1
+    i traversal [1..panjangArray(array)]
+        if array[i][kategori] = namaJenis then
+            panjangArrayBaru <- panjangArrayBaru + 1
+    
+    arrayBaru[1] <- array[1]
+
+    indeksArrayBaru <- 1
+    i traversal [1..panjangArray(array)]
+        if array[i][kategori] = namaJenis then
+            arrayBaru[indeksArrayBaru] <- array[i]
+            indeksArrayBaru <- indeksArrayBaru + 1
+    
+    -> arrayBaru
+
+
+{subfungsi perihal penambahan game}
+function angkaSemua(kalimat : array of char) -> bool
+{mengecek apakah input berupa angka semua}
+
+    ya : bool
+
+    ya <- True
+    i traversal [1..panjangArray(kalimat)]
+        if not ( (ord(kalimat[i]) >= 48 and ord(kalimat[i]) <= 57) )  then
+            ya <- False
+            break
+    -> ya
+
+function inputHargaBenar(kalimat : array of char) -> bool
+{mengecek apakah input sesuai dengan penulisan atau berisi angka semua}
+
+    ya : bool
+
+    ya <- True
+    if angkaSemua(kalimat) then
+        pass
+    else
+        i traversal [panjangArray(kalimat)..1]
+            if (panjangArray(kalimat) - i)%4 = 0 then
+                if ord(kalimat[i]) = 46 then
+                    pass
+                else if not ord(kalimat[i]) = 46 then
+                    ya <- False
+                    break
+            else if not ( (ord(kalimat[i]) >= 48 and ord(kalimat[i]) <= 57) )  then
+                ya <- False
+                break
+    -> ya
+
+function angka(kalimat : array of character) -> string
+{mengubah input menjadi angka semua secara proper (tidak ada 0 di depan)}
+
+    temp : string
+
+    temp <- ''
+    i traversal [1..panjangArray(kalimat)]
+        if not ( (ord(kalimat[i]) >= 48 and ord(kalimat[i]) <= 57) ) then
+            pass
+        else
+            temp <- temp + kalimat[i]
+    
+    temp <- int(temp)
+    temp <- str(temp)
+
+    -> temp
+
+function tambahTitikHarga(angka : array of character) -> string
+{menambahkan titik setiap 3 angka}
+{input berupa angka semua}
+
+    temp : string
+
+    temp <- ''
+    i traversal [1..panjangArray(angka)]
+        temp <- temp + angka[i]
+        if ( 2 + panjangArray(angka)-i ) % 3 = 0 and i /= panjangArray(angka)-1 then
+            temp <- temp + '.'
+    -> temp
+
+function tambahBarisKosong(array : array of array of string) -> array of array of string
+{menambah satu baris kosong di ujung array}
+
+    kategori : integer
+    jumlahDataBaru : integer
+
+    kategori <- panjangArray(array[1])
+    jumlahDataBaru <- panjangArray(array) + 1
+    arrayBaru <- array [1..jumlahDataBaru] of array [kategori] of string
+
+    for i in range(panjangArray(array))
+        arrayBaru[i] <- array[i]
+    
+    -> arrayBaru
+
+
+{subfungsi perihal pengubahan data array}
+function idSesuai(array : array of array of string, idgame : string, namaKategoriId : string, output : string) -> bool
+{menentukan apabila id game yang ditulis sesuai dan terdapat pada array}
+
+    sesuai : bool
+    ada : bool
+    temp : string
+    temp2 : string
+    temp3 : string
+
+    sesuai <- False
+    if idgame = '' then
+        output("Harap masukkan idgame.\n")
+    else
+        if panjangArray(idgame) = 3 then
+                if not angkaSemua(idgame) then
+                    output("Masukkan idgame dengan format G000, GAME000, atau 000 dengan 000 berupa kode angka game yang diinginkan.\n")
+                else
+                    temp2 <- 'GAME' + idgame
+                    
+                    ada <- False
+                    i traversal [2..panjangArray(array)]
+                        if temp2 = array[i][kodeKategori(array, namaKategoriId)] then
+                            ada <- True
+
+                    if not ada then
+                        output("Id tidak terdapat pada daftar game.\n")
+                    else
+                        sesuai <- True
+
+        else if panjangArray(idgame) = 4 then
+            temp <- ''
+            i traversal [2..4]
+                temp <- temp + idgame[i]
+            if not angkaSemua(temp) or idgame[1] /= 'G' then
+                output("Masukkan idgame dengan format G000, GAME000, atau 000 dengan 000 berupa kode angka game yang diinginkan.\n")
+            else
+                temp2 <- 'GAME' + temp
+                
+                ada <- False
+                    i traversal [2..panjangArray(array)]
+                    if temp2 = array[i][kodeKategori(array, namaKategoriId)] then
+                        ada <- True
+
+                if not ada then
+                    output("Id tidak terdapat pada daftar game.\n")
+                else
+                    sesuai <- True
+            
+        else if panjangArray(idgame) = 7 then
+            temp <- ''
+            temp3 <- ''
+            i traversal [5..7]
+                temp <- temp + idgame[i]
+            i traversal [1..4]
+                temp3 <- temp3 + idgame[i]
+                
+            if not angkaSemua(temp) or temp3 /= 'GAME' then
+                output("Masukkan idgame dengan format G000, GAME000, atau 000 dengan 000 berupa kode angka game yang diinginkan.\n")
+            else
+                temp2 <- 'GAME' + temp
+                    
+                ada <- False
+                i traversal [2..panjangArray(array)]
+                    if temp2 = array[i][kodeKategori(array, namaKategoriId)]
+                        ada <- True
+
+                if not ada then
+                    output("Id tidak terdapat pada daftar game.\n")
+                else
+                    sesuai <- True
+            
+        else
+            output("Masukkan idgame dengan format G000, GAME000, atau 000 dengan 000 berupa kode game yang diinginkan.\n")
+
+    -> sesuai
+
+function cariId(array : array of array of string, idgame : string, namaKategoriId : string) -> integer
+{mencari letak id di array}
+{id harus ada di array dan sudah disesuaikan oleh fungsi idSesuai}
+
+    kolomId : array of string
+    temp : string
+    temp2 : string
+    lokasi : integer
+
+    kolomId <- kolom(array, namaKategoriId)
+
+    if panjangArray(idgame) = 3 then
+        temp2 <- 'GAME' + idgame
+    else if panjangArray(idgame) = 4 then
+            temp <- ''
+            i traversal [2..4]
+                temp <- temp + idgame[i]
+            temp2 <- 'GAME' + temp
+    else
+        temp2 <- idgame
+
+    lokasi <- urutanDiArray(kolomId, temp2)
+
+    -> lokasi
+
+function usernameValid(kalimat : string) -> bool
+
+    valid : bool
+
+    valid <- True
+
+    for i in kalimat:
+        if ord(i) >= 48 and ord(i) <= 57 then
+            pass
+        else if ord(i) >= 65 and ord(i) <= 90 then
+            pass
+        else if ord(i) >= 97 and ord(i) <= 122 then
+            pass
+        else if ord(i) == 95 or ord(i) == 126 then
+            pass
+        else:
+            valid = False
+    
+    -> valid
+
+
+{Fungsi utama aplikasi}
+function register(array : array of array of string, key : integer, input nama : string, input username : string, input password : string, output : string) -> array of array of string
+
+    array : array of array of string
+    userId : integer/string
+    lokasi : integer
+    sukses : bool
+
+    array <- salin(array)
+    sukses <- False
+
+    input(nama)
+    input(username)
+    input(password)
+    if nama = '' or username = '' or password = '' then
+        output("Nama atau username atau password kosong.")
+    else
+        if usernameValid(username) then
+            if adaDiArray(kolom(array, 'username'), username) then
+                output("Username", username, "sudah dipakai, gunakan username yang lain.\n")
+            else
+                sukses <- True
+        else
+            output("Username menggunakan karakter yang tidak valid (Username hanya dapat mengandung alfabet A-Z/a-z, underscore “_”, strip “-”, dan angka 0-9. )\n")
+
+    if sukses then
+        userId <- int(sortKategoriAngka(array, 'id', '-')[2][kodeKategori(array, 'id')]) +1
+        userId <- str(userId)
+
+        array <- tambahBarisKosong(array)
+        lokasi <- panjangArray(array)
+        array[lokasi][kodeKategori(array, 'id')] <- userId
+        array[lokasi][kodeKategori(array, 'nama')] <- nama
+        array[lokasi][kodeKategori(array, 'username')] <- username
+        array[lokasi][kodeKategori(array, 'password')] <- encrypt(password, key)
+        array[lokasi][kodeKategori(array, 'role')] <- 'User'
+        array[lokasi][kodeKategori(array, 'saldo')] <- '0'
+
+        output("\nAkun berhasil ditambah.\n")
+    
+    -> array
+
+function login(array : array of array of string, key : integer, input inputUsername : string, input inputPassword : string, output : string) -> array of string
+
+    state : string
+    userid : string
+    nama : string
+
+    repeat
+        input(inputUsername)
+        input(inputPassword)
+        if not adaDiArray(kolom(array, 'username'), inputUsername) or not adaDiArray(kolom(array, 'password'), encrypt(inputPassword, key)) then
+            output("Password atau username salah atau tidak ditemukan.\n")
+    until adaDiArray(kolom(array, 'username'), inputUsername) and adaDiArray(kolom(array, 'password'), encrypt(inputPassword, key))
+
+    lokasi <- urutanDiArray(kolom(array, 'username'), inputUsername)
+    state <- array[lokasi][kodeKategori(array, 'role')]
+    userid <- array[lokasi][kodeKategori(array, 'id')]
+    nama <- array[lokasi][kodeKategori(array, 'nama')]
+
+    output("\nHalo " + nama + "!" + " Selamat datang di Binomo!\n")
+    -> (userid, state)
+
+function tambah_game(array : array of array of string,
+                    input namaGame : string, input kategori : string, input tahunRilis : string,
+                    input harga : string, input stok : string, output : string) -> array of array of string
+
+    array : array of array of string
+    generatedId : string
+    temp : string
+    temp2 : string
+    sukses : bool
+
+    array <- salin(array)
+    sukses <- False
+
+    input(namaGame)
+    input(kategori)
+    input(tahunRilis)
+    input(harga
+    input(stok)
+    if namaGame = '' or kategori = '' or tahunRilis = '' or harga = '' or stok = '' then
+        output("Mohon masukkan semua informasi mengenai game agar dapat disimpan BNMO\n")
+    else
+        if not angkaSemua(tahunRilis) or not angkaSemua(stok) or not inputHargaBenar(harga) then
+            output("Terdapat input tidak valid, mohon cek tahun rilis, harga, dan stok.\n")
+        else
+            tahunRilis <- angka(tahunRilis)
+            stok <- angka(stok)
+            harga <- angka(harga)
+             
+            if int(tahunRilis) < 1900 then
+                output("Game apaan yang rilis tahun segitu?\n")
+            else if int(tahunRilis) > 2022 then
+                output("Gak terima jualan pre-order bang\n")
+            else
+                sukses <- True
+
+    if sukses then
+        if panjangArray(array) = 1 then
+            generatedId <- 'GAME001'
+
+        else
+            tempArray <- sortKategoriHuruf(array, 'id', '-')
+            generatedId <- tempArray[2][kodeKategori(array, 'id')]
+            temp <- ''
+            i traversal [5, panjangArray(generatedId)]
+                temp <- temp + generatedId[i]
+            temp <- int(temp) + 1
+            temp <- str(temp)
+            if panjangArray(temp) <= 3 then
+                temp2 <- 'GAME'
+                for i in range(3-panjangArray(temp))
+                    temp2 <- temp2 + '0'
+                for i in range(panjangArray(temp))
+                    temp2 <- temp2 + temp[i]
+            generatedId <- temp2
+
+        array <- tambahBarisKosong(array)
+        array[panjangArray(array)][kodeKategori(array, 'id')] <- generatedId
+        array[panjangArray(array)][kodeKategori(array, 'nama')] <- namaGame
+        array[panjangArray(array)][kodeKategori(array, 'kategori')] <- kategori
+        array[panjangArray(array)][kodeKategori(array, 'tahun_rilis')] <- tahunRilis
+        array[panjangArray(array)][kodeKategori(array, 'harga')] <- tambahTitikHarga(harga)
+        array[panjangArray(array)][kodeKategori(array, 'stok')] <- stok
+        
+        output("\nSelamat! Berhasil menambahkan game", namaGame, '\n')
+
+    -> array
+
+function ubah_game(array : array of array of string,
+                    input namaGame : string, input kategori : string, input tahunRilis : string, input harga : string, output: string) -> array of array of string
+    
+    array : array of array of string
+    lokasi : integer
+    ubah : bool
+    sukses : bool
+
+    sukses <- False
+
+    input(idgame)
+    input(namaGame)
+    input(kategori)
+    input(tahunRilis)
+    input(harga)
+
+    if idgame = '' then
+        output("Harap masukkan idgame.\n")
+    else if (tahunRilis /= '' and not angkaSemua(tahunRilis) ) then
+        output("Input tahun rilis tidak sesuai.")
+    else if (harga /= '' and not inputHargaBenar(harga)) then
+        output("input harga tidak sesuai.\n")
+    else
+        if idSesuai(array, idgame, 'id') then
+            if tahunRilis /= '' then
+                tahunRilis <- int(tahunRilis)
+                if tahunRilis < 1900 then
+                    output("Game apaan yang rilis tahun segitu?\n")
+                else if tahunRilis > 2022 then
+                    output("Gak terima jualan pre-order bang\n")
+                else
+                    tahunRilis <- str(tahunRilis)
+                    sukses <- True
+            else
+                sukses <- True
+    
+    if sukses then
+        lokasi <- cariId(array, idgame, 'id')
+
+        ubah <- False
+        if namaGame /= '' then
+            array[lokasi][kodeKategori(array, 'nama')] <- namaGame
+            ubah <- True
+        if kategori /= '' then
+            array[lokasi][kodeKategori(array, 'kategori')] <- kategori
+            ubah <- True
+        if tahunRilis /= '' then
+            array[lokasi][kodeKategori(array, 'tahun_rilis')] <- angka(tahunRilis)
+            ubah <- True
+        if harga /= '' then
+            array[lokasi][kodeKategori(array, 'harga')] <- tambahTitikHarga(angka(harga))
+            ubah <- True
+
+        if ubah then
+            output("\nSelamat! Game dengan id", idgame, 'berhasil diubah\n')
+        else
+            output("\nKok gak ngubah apa apa? suka buang - buang waktu ya?\n")
+
+    -> array
+
+function ubah_stok(array : array of array of string, input idgame : string, input ubahanstok : string, output : string) -> array of array of string
+
+    sukses : bool
+    sesuai1 : bool
+    sesuai2 : bool
+    temp : string
+    lokasi : integer
+    stokSekarang : integer
+    stokBaru : integer
+
+
+
+    sukses <- False
+    sesuai1 <- False
+    sesuai2 <- False
+        
+    input(idgame)
+
+    if idSesuai(array, idgame, 'id') then
+        sesuai1 <- True
+
+    if sesuai1 then
+        input(ubahanstok)
+
+        if ubahanstok == '' them
+            output("input stok tidak valid.\n")
+        else
+            if ubahanstok[1] = '-' then
+                temp <- ''
+                i traversal [2..panjangArray(ubahanstok)]
+                    temp <- temp + ubahanstok[i]
+            else
+                temp <- ubahanstok
+
+            if not angkaSemua(temp) then
+                output("input stok tidak valid.\n")
+            else
+                sesuai2 <- True
+        
+    if sesuai2 then
+        lokasi <- cariId(array, idgame, 'id')
+        stokSekarang <- int(array[lokasi][kodeKategori(array, 'stok')])
+        stokBaru <- stokSekarang + int(ubahanstok)
+        if stokBaru < 0 then
+            output("\nStok game", array[lokasi][kodeKategori(array, 'nama')], 'gagal dikurangi karena stok kurang. Stok sekarang', stokSekarang, '(<', temp, ').\n')
+        else
+            array[lokasi][kodeKategori(array, 'stok')] <- str(stokBaru)
+            break
+    
+    if sukses then
+        if int(ubahanstok) = 0 then
+            output("\nKok gak ngubah apa apa? suka buang - buang waktu ya?\n")
+        else
+            if int(ubahanstok) < 0 then
+                output("\nStok game", array[lokasi][kodeKategori(array, 'nama')], 'berhasil dikurangi. Stok sekarang', stokBaru, '.\n')
+            else
+                output("\nStok game", array[lokasi][kodeKategori(array, 'nama')], 'berhasil ditambah. Stok sekarang', stokBaru, '.\n')
+
+    -> array
+
+procedure list_game_toko(array : array of array of string, input skema : string, output : string)
+
+    temp : string
+
+    while True
+        input(skema)
+        if skema = '' then
+            printRapi(array)
+            break
+        else
+            temp <- ''
+            i traversal [1..panjangArray(skema)-1]
+                temp <- temp + skema[i]
+            
+            if skema = '' then
+                printRapi(array)
+                break
+            else
+                cara <- skema[panjangArray(skema)]
+
+                if temp = 'tahun' then
+                    temp <- 'tahun_rilis'
+
+                if not adaDiArray(array[1], temp) then
+                    output("Skema sorting tidak valid.\n")
+                else if cara = '+' or cara = '-' then
+                    if temp = 'id' or temp = 'kategori' or temp = 'nama' then
+                        printRapi(sortKategoriHuruf(array, temp, cara))
+                        break
+                    else if temp = 'tahun_rilis' or 'harga' or 'stok' then
+                        printRapi(sortKategoriAngka(array, temp, cara))
+                        break
+                else
+                    output("Skema sorting tidak valid.\n")
+
+function buy_game(arraygame : array of array of string, arrayriwayat : array of array of string,
+                 arraykepemilikan : array of array of string, arrayuser : array of array of string,
+                 userid : string, input idgame : string, output : string) -> array of array of array of string
+
+    temp : string
+    temp2 : string
+    informasiUser : string
+    gamePunya : array of array of string
+    punya : bool
+    saldo : integer
+    lokasigame : integer
+    harga : integer
+    stok : integer
+
+    while True
+        informasiUser <- cariKategori(arrayuser, 'id', userid)
+        output("Saldo kamu saat ini", informasiUser[2][kodeKategori(informasiUser, 'saldo')])
+        input(idgame)
+        
+        if idgame = 'cancel' or idgame = 'Cancel' or idgame = 'CANCEL' then
+            output("\nTransaksi digagalkan.\n")
+            break
+    
+        if idSesuai(arraygame, idgame, 'id') then
+            gamePunya <- cariKategori(arraykepemilikan, 'user_id', userid)
+
+            if panjangArray(idgame) = 3 then
+                temp2 <- 'GAME' + idgame
+            else if panjangArray(idgame) = 4 then
+                    temp <- ''
+                    i traversal 2..4
+                        temp <- temp + idgame[i]
+                    temp2 <- 'GAME' + temp
+            else
+                temp2 <- idgame
+
+            punya <- False
+            i traversal [1..panjangArray(gamePunya)]
+                if temp2 = kolom(gamePunya, 'game_id')[i] then
+                    output("Game sudah dimiliki.\n")
+                    punya <- True
+
+            if not punya then
+                saldo <- int(angka(informasiUser[2][kodeKategori(informasiUser, 'saldo')]))
+                lokasigame <- cariId(arraygame, idgame, 'id')
+                harga <- int(angka(arraygame[lokasigame][kodeKategori(arraygame, 'harga')]))
+                stok <- int(arraygame[urutanDiArray(kolom(arraygame, 'id'), temp2)][kodeKategori(arraygame, 'stok')])
+
+                if saldo - harga < 0 then
+                    output("Saldo tidak mencukupi.\n")
+                else if stok = 0 then
+                    output("Stok game habis.\n")
+                else
+                    arraykepemilikan <- tambahBarisKosong(arraykepemilikan)
+                    arrayriwayat <- tambahBarisKosong(arrayriwayat)
+                    
+                    arraykepemilikan[panjangArray(arraykepemilikan)][kodeKategori(arraykepemilikan, 'user_id')] <- userid
+                    arraykepemilikan[panjangArray(arraykepemilikan)][kodeKategori(arraykepemilikan, 'game_id')] <- temp2
+
+                    arrayriwayat[panjangArray(arrayriwayat)][kodeKategori(arrayriwayat, 'user_id')] <- userid
+                    arrayriwayat[panjangArray(arrayriwayat)][kodeKategori(arrayriwayat, 'game_id')] <- temp2
+                    arrayriwayat[panjangArray(arrayriwayat)][kodeKategori(arrayriwayat, 'nama')] <- arraygame[lokasigame][kodeKategori(arraygame, 'nama')]
+                    arrayriwayat[panjangArray(arrayriwayat)][kodeKategori(arrayriwayat, 'harga')] <- arraygame[lokasigame][kodeKategori(arraygame, 'harga')]
+                    arrayriwayat[panjangArray(arrayriwayat)][kodeKategori(arrayriwayat, 'tahun_beli')] <- time.strftime("%Y")
+
+                    arrayuser[urutanDiArray(kolom(arrayuser, 'id'), userid)][kodeKategori(arrayuser, 'saldo')] <- tambahTitikHarga(str(saldo - harga))
+                    arraygame[urutanDiArray(kolom(arraygame, 'id'), temp2)][kodeKategori(arraygame, 'stok')] <- str(stok-1)
+
+                    output("\nSelamat,", arraygame[lokasigame][kodeKategori(arraygame, 'nama')], "berhasil dibeli. Saldo kamu sekarang ", tambahTitikHarga(str(saldo - harga)), "\n")
+
+                    break
+
+    ->(arrayriwayat, arraykepemilikan)
+
+function list_game(arraygame : array of array of string, arraykepemilikan : array of array of string, userid : string, output : string) -> array of array of string
+
+    arraymilik : array of array of string
+    panjangArrayBaru : integer
+    jumlahKategoriArrayBaru : integer
+    idgame : string
+    lokasi : integer
+    line : integer
+    i : integer
+    j : integer
+
+    arraymilik <- cariKategori(arraykepemilikan, 'user_id', userid)
+    if panjangArray(arraymilik) = 1 then
+        output("\nMaaf, kamu belum memiliki game. Ketik perintah beli_game untuk beli.\n")
+
+    panjangArrayBaru <- panjangArray(arraymilik)
+    jumlahKategoriArrayBaru <- panjangArray(arraygame[0])-1
+        
+    arrayBaru : array [1..panjangArrayBaru] of array [1..jumlahKategoriArrayBaru] of string
+
+    line traversal [1..panjangArrayBaru]
+        if line > 0 then
+            idgame <- arraymilik[line][kodeKategori(arraymilik, 'game_id')]
+            lokasi <- urutanDiArray(kolom(arraygame, 'id'), idgame)
+        else
+            lokasi <- line
+        i <- 0
+        j <- 0
+        while i < panjangArray(arraygame[1]) do
+            if i = kodeKategori(arraygame, 'stok') then
+                i <- i + 1
+            else
+                arrayBaru[line][j] <- arraygame[lokasi][i]
+                i <- i + 1
+                j <- j + 1
+
+    -> arrayBaru
+
+procedure search_my_game(arraygame : array of array of string, arraykepemilikan : array of array of string, userid : string,
+                        input idgame : string, input nama : string, input harga : string, input kategori : string, input tahun : string
+                        output : string)
+
+    array : array of array of string
+    temp : string
+    temp2 : string
+
+    array <- list_game(arraygame, arraykepemilikan, userid)
+
+    input(idgame)
+    input(nama)
+    input(harga)
+    input(kategori)
+    input(tahun)
+
+    if idgame /= '' then
+        if idSesuai(array, idgame, 'id') then
+
+            if panjangArray(idgame) = 3 then
+                temp2 <- 'GAME' + idgame
+            else if panjangArray(idgame) = 4 then
+                    temp <- ''
+                    for i in range(1, 4)
+                        temp <- temp + idgame[i]
+                    temp2 <- 'GAME' + temp
+            else
+                temp2 <- idgame
+            array <- cariKategori(array, 'id', temp2)
+
+        else
+            array <- cariKategori(array, 'id', idgame)
+
+    if nama /= '' then
+        array <- cariKategori(array, 'nama', nama)
+    if harga /= '' then
+        array <- cariKategori(array, 'harga', harga)
+    if kategori /= '' then
+        array <- cariKategori(array, 'kategori', kategori)
+    if tahun /= '' then
+        array <- cariKategori(array, 'tahun_rilis', tahun)
+    
+    if panjangArray(array) = 1 then
+        output("\nTidak ada game di inventory yang memenuhi kriteria.\n")
+    else
+        printRapi(array)
+
+procedure search_game_at_store(array : array of array of string
+                               input idgame : string, input nama : string, input harga : string, input kategori : string, input tahun : string
+                               output : string)
+    
+    temp : string
+    temp2 : string
+
+    input(idgame)
+    input(nama)
+    input(harga)
+    input(kategori)
+    input(tahun)
+
+    if idgame /= '' then
+        if idSesuai(array, idgame, 'id') then
+
+            if panjangArray(idgame) = 3 then
+                temp2 <- 'GAME' + idgame
+            else if panjangArray(idgame) = 4 then
+                    temp <- ''
+                    for i in range(1, 4)
+                        temp <- temp + idgame[i]
+                    temp2 <- 'GAME' + temp
+            else
+                temp2 <- idgame
+            array <- cariKategori(array, 'id', temp2)
+
+        else
+            array <- cariKategori(array, 'id', idgame)
+
+    if nama /= '' then
+        array <- cariKategori(array, 'nama', nama)
+    if harga /= '' then
+        array <- cariKategori(array, 'harga', harga)
+    if kategori /= '' then
+        array <- cariKategori(array, 'kategori', kategori)
+    if tahun /= '' then
+        array <- cariKategori(array, 'tahun_rilis', tahun)
+    
+    if panjangArray(array) = 1 then
+        output("\nTidak ada game di store yang memenuhi kriteria.\n")
+    else
+        printRapi(array)
+
+function topup(array : array of array of string,
+                input username : string, input saldo : string,
+                output : string) -> array of array of string
+
+    temp : string
+    berubah : bool
+    lokasi : integer
+    saldoSekarang : string/integer
+
+    while True
+        input(username)
+        input(saldo)
+
+        temp <- ''
+        berubah <- False
+
+        if saldo = '' or username = '' then
+            output("\nMasukkan saldo atau username tidak valid.\n")
+        else
+            if saldo[1] = '-' then
+                i traversal [2..panjangArray(saldo)]
+                    temp <- temp + saldo[i]
+            else
+                temp <- saldo
+
+            if not adaDiArray(kolom(array, 'username'), username) then
+                output("\nUsername salah atau tidak ditemukan.\n")
+            else if not inputHargaBenar(temp) then
+                output("\nMasukkan saldo tidak valid.\n")
+            else
+                lokasi <- urutanDiArray(kolom(array, 'username'), username)
+                saldoSekarang <- array[lokasi][kodeKategori(array, 'saldo')]
+                if saldo[1] = '-' then
+                    if int(angka(saldoSekarang)) - int(angka(temp)) < 0 then
+                        output("\nPengurangan saldo dibatalkan, saldo tidak mencukupi (saldo sekarang", saldoSekarang, ')\n')
+                    else
+                        saldoSekarang <- int(angka(saldoSekarang)) - int(angka(temp))
+                        output("\nSaldo berhasil dikurangi, saldo sekarang", saldoSekarang)
+                        break
+                else
+                    saldoSekarang <- int(angka(saldoSekarang)) + int(angka(temp))
+                    output("\nSaldo berhasil ditambah, saldo sekarang", saldoSekarang)
+                    break
+
+    array[lokasi][kodeKategori(array, 'saldo')] <- tambahTitikHarga(str(saldoSekarang))
+    
+    -> array
+
+procedure riwayat(array : array of array of string, userid : string, output : string)
+
+    array : array of array of string
+    panjangArrayBaru : integer
+    jumlahKategoriArrayBaru : integer
+    i : integer
+    j : integer
+
+    array <- cariKategori(array, 'user_id', userid)
+
+    panjangArrayBaru <- panjangArray(array)
+    jumlahKategoriArrayBaru <- panjangArray(array[1])-1
+
+    arrayBaru <- array [1..panjangArrayBaru] of array [1..jumlahKategoriArrayBaru] of string
+
+    line traversal [1..panjangArrayBaru]
+        i <- 0
+        j <- 0
+        while i < panjangArray(array[1]) do
+            if i = kodeKategori(array, 'user_id') then
+                i <- i + 1
+            else
+                arrayBaru[line][j] <- array[line][i]
+                i <- i + 1
+                j <- j + 1
+    
+    printRapi(arrayBaru)
+
+procedure help(role : string, output : string)
+
+    helpArray : array of string
+    nomor : integer
+
+    helpArray <- ['=============== HELP ===============',
+    'register - Untuk melakukan registrasi user baru',
+    'logout - Untuk melakukan login ke dalam akun lain',
+    'tambah_game - Untuk menambahkan game yang dijual pada toko',
+    'ubah_game - Untuk mengubah informasi game yang dijual pada toko',
+    'ubah_stok - Untuk mengubah stok game yang dijual pada toko',
+    'list_game_toko - Untuk melihat daftar game yang dijual pada toko',
+    'buy_game - Untuk membeli game yang dijual pada toko',
+    'list_game - Untuk melihat game yang dimiliki',
+    'search_my_game - Untuk mencari game yang dimiliki berdasarkan kriteria',
+    'search_game_at_store - Untuk mencari game yang dijual pada toko berdasarkan kriteria',
+    'topup - Untuk menambahkan saldo pada user',
+    'riwayat - Untuk melihat daftar riwayat pembelian game',
+    'help - Untuk melihat daftar command yang tersedia',
+    'save - Untuk menyimpan data agar perubahan menjadi permanen',
+    'exit - Untuk keluar dari aplikasi BNMO',
+    'kerangajaib - Untuk memanggil kulit kerang ajaib',
+    'tictactoe - Untuk bermain tic-tac-toe']
+
+    output(helpArray[1])
+    nomor <- 1
+    i traversal [2..panjangArray(helpArray)]
+        if role = 'Admin' then
+            if i = 1 or i = 2 or i = 3 or i = 4 or i = 5 or i = 6 or i = 10 or i = 11 or i = 13 or i = 14 or i = 15 or i = 16 or i = 17 then
+                output(str(nomor) + '. ' + helpArray[i])
+                nomor <- nomor + 1
+        else if role = 'User' then
+            if  i = 2 or i = 6 or i = 7 or i = 8 or i = 9 or i = 10 or i = 12 or i = 13 or i = 14 or i = 15 or i = 16 or i = 17 then
+                output(str(nomor) + '. ' + helpArray[i])
+                nomor <- nomor + 1
+    output()
+
+function load(input <nama_folder> : string, output : string) -> array of bool and array of array of string
+
+    parser : string?
+    parser.error <- string
+    args : string
+    path : string
+    folder : string
+    userArray : SEQFILE of string
+    gameArray : SEQFILE of string
+    riwayatArray : SEQFILE of string
+    kepemilikanArray : SEQFILE of string
+
+    parser <- argparse.ArgumentParser(description='Load data ke sistem', exit_on_error=False)
+    parser.add_argument('nama_folder', type=str, metavar='<nama_folder>')
+    
+    try
+        parser.error <- output('', end='')
+        args <- parser.parse_args()
+
+    except
+        parser.error <- output("\nTidak ada nama folder yang diberikan!\nUsage python program_binomo.py <nama_folder>")
+        -> False, [], [], [], []
+
+    folder <- args.nama_folder
+    path <- os.getcwd() + '/' + folder
+    if os.path.exists(path) then
+        output('\nLoading...')
+        userArray <- open(folder+'\\'+'user.csv')
+        gameArray <- open(folder+'\\'+'game.csv')
+        riwayatArray <- open(folder+'\\'+'riwayat.csv')
+        kepemilikanArray <- open(folder+'\\'+'kepemilikan.csv')
+        output('Selamat datang di antarmuka \'Binomo\'!')
+        -> True, parsedCsv(userArray), parsedCsv(gameArray), parsedCsv(riwayatArray), parsedCsv(kepemilikanArray)
+    else
+        output("\nFolder", folder, "tidak ditemukan.")
+        -> False, [], [], [], []
+
+procedure save(input namaFile : string, input konfirmasi : string, output : string)
+
+    path : string
+    savefile : string
+    userArray : SEQFILE of string
+    gameArray : SEQFILE of string
+    riwayatArray : SEQFILE of string
+    kepemilikanArray : SEQFILE of string
+
+    while True
+        input(namaFile)
+
+        path <- os.getcwd() + '/' + namaFile
+
+        if os.path.exists(path) then
+            while True
+                input(konfirmasi)
+                if konfirmasi = 'Y' or konfirmasi = 'y' or konfirmasi = 'N' or konfirmasi = 'n' then
+                    break
+                else
+                    output("Input tidak valid.")
+
+            if konfirmasi = 'Y' or konfirmasi = 'y' then
+                gameCsv <- open(namaFile+'/game.csv', 'w')
+                userCsv <- open(namaFile+'/user.csv', 'w')
+                riwayatCsv <- open(namaFile+'/riwayat.csv', 'w')
+                kepemilikanCsv <- open(namaFile+'/kepemilikan.csv', 'w')
+                break
+        
+        else
+            os.mkdir(namaFile)
+            gameCsv <- open(namaFile+'/game.csv', 'w')
+            userCsv <- open(namaFile+'/user.csv', 'w')
+            riwayatCsv <- open(namaFile+'/riwayat.csv', 'w')
+            kepemilikanCsv <- open(namaFile+'/kepemilikan.csv', 'w')
+            break
+
+    output("\nsaving...")
+    savefile <- arrayToCsv(gameArray)
+    gameCsv.write(savefile)
+    savefile <- arrayToCsv(userArray)
+    userCsv.write(savefile)
+    savefile <- arrayToCsv(riwayatArray)
+    riwayatCsv.write(savefile)
+    savefile <- arrayToCsv(kepemilikanArray)
+    kepemilikanCsv.write(savefile)
+
+    gameCsv.close()
+    userCsv.close()
+    riwayatCsv.close()
+    kepemilikanCsv.close()
+    
+    output("Data telah disimpan pada folder", namaFile, '\n')
+
+
+{Fungsi Spesifikasi bonus}
+{Spesifikasi bonus tidak komplit notasi algoritmanya}
+
+procedure magicConch()
+    input("Apa pertanyaanmu pada kulit kerang ajaib? ")
+
+    randomNumber <- str(time.time())
+    randomNumber <- randomNumber[panjangArray(randomNumber)-1]
+
+    output("\nKulit kerang ajaib berkata ", end='')
+    if randomNumber = '0' then
+        output("kali.")
+    else if randomNumber = '1' then
+        output("Ya.")
+    else if randomNumber = '2' then
+        output("Mungkin?")
+    else if randomNumber = '3' then
+        output("Yakali.")
+    else if randomNumber = '4' then
+        output("ga.")
+    else if randomNumber = '5' then
+        output("Tidak.")
+    else if randomNumber = '6' then
+        output("Bisa Jadi.")
+    else if randomNumber = '7' then
+        output("Tentunya.")
+    else if randomNumber = '8' then
+        output("Tidak Mungkin.")
+    else if randomNumber = '9' then
+        output("Ahahaha, Serius?")
+    output("\n")
+
+function kondisiMenang(array)
+{untuk bonus tiktaktu}
+    menang <- False
+    pemain <- ' '
+    for i in range(3)
+        if array[i][0] = array[i][1] and array[i][0] = array[i][2] and (array[i][0] =='O' or array[i][0] = 'X') then
+            menang <- True
+            pemain <- array[i][0]
+
+    if menang = False then
+        for i in range(3)
+            if array[0][i] = array[1][i] and array[0][i] = array[2][i] and (array[0][i] =='O' or array[0][i] = 'X') then
+                menang <- True
+                pemain <- array[0][i]
+        if menang = False then
+            if array[0][0] = array[1][1] and array[0][0] = array[2][2] and (array[0][0] =='O' or array[0][0] = 'X') then
+                menang <- True
+                pemain <- array[0][0]
+            else
+                if array[0][2] = array[1][1] and array[0][2] = array[2][0] and (array[0][2] =='O' or array[0][2] = 'X') then
+                    menang <- True
+                    pemain <- array[0][2]
+    
+    -> (menang, pemain)
+
+procedure tictactoe()
+    arraytictactoe <- [['#' for i in range(3)] for i in range(3)]
+    output("Legenda")
+    output("# kosong")
+    output("O pemain 1")
+    output("X pemain 2")
+
+    while True
+        output("\nStatus papan")
+        for i in range(3)
+            for j in range(3)
+                output(arraytictactoe[i][j], end='')
+            output('\n')
+        output('\n')
+
+        while True
+            output("Giliran Pemain O")
+            X <- input("X ")
+            Y <- input("Y ")
+            if not angkaSemua(X) or not angkaSemua(Y):
+                output("Masukkan salah.\n")
+            else:
+                X <- int(X)
+                Y <- int(Y)
+                if not ((X <= 3 and X>=1) and (Y <=3 and Y >= 1)) then
+                    output("Masukkan salah.\n")
+                else
+                    if arraytictactoe[Y-1][X-1] /= '#' then
+                        output("Masukkan salah.\n")
+                    else
+                        arraytictactoe[Y-1][X-1] <- 'O'
+                        break
+            kondisi <- kondisiMenang(arraytictactoe)
+
+        penuh <- True
+        for i in range(3)
+            for j in range(3)
+                if arraytictactoe[i][j] == '#'
+                    penuh = False
+
+        if kondisi[0] then
+            break
+        else
+            output("\nStatus papan")
+            for i in range(3)
+                for j in range(3)
+                    output(arraytictactoe[i][j], end='')
+                output('\n')
+            output('\n')
+
+            while True
+                output("Giliran Pemain X")
+                X <- input("X ")
+                Y <- input("Y ")
+                if not angkaSemua(X) or not angkaSemua(Y):
+                    print("Masukkan salah.\n")
+                else:
+                    X = int(X)
+                    Y = int(Y)
+                    if not ((X <= 3 and X>=1) and (Y <=3 and Y >= 1)) then
+                        output("Masukkan salah.\n")
+                    else
+                        if arraytictactoe[Y-1][X-1] /= '#' then
+                            output("Masukkan salah.\n")
+                        else
+                            arraytictactoe[Y-1][X-1] <- 'X'
+                            break
+            kondisi <- kondisiMenang(arraytictactoe)
+
+            penuh <- True
+            for i in range(3)
+                for j in range(3)
+                    if arraytictactoe[i][j] == '#'
+                        penuh = False
+
+            if kondisi[0] then
+                break
+            else if penuh the
+                break
+    
+    output("\nStatus papan")
+    for i in range(3)
+        for j in range(3)
+            output(arraytictactoe[i][j], end='')
+        output('\n')
+    output('\n')
+
+    if kondisi[0]
+        output("\nPemain", kondisi[1], 'menang.\n')
+    else
+        print("Permainan berakhir seri.")
+
+function encrypt(text, key)
+{Metode yang digunakan adalah keyed caesar cipher}
+    temp =''
+    for i in range(panjangArray(text))
+        if ord(text[i]) + key > 126 then
+            temp <- temp + chr(ord(text[i]) + key - 127 + 32)
+        else
+            temp <- temp + chr(ord(text[i]) + key)
+    -> temp
+
+function decrypt(text, key)
+    temp =''
+    for i in range(panjangArray(text))
+        if ord(text[i]) - key < 32 then
+            temp <- temp + chr(ord(text[i]) - key + 126 - 31)
+        else
+            temp <- temp + chr(ord(text[i]) - key)
+    -> temp
+
+
+{Fungsi printing}
+procedure printRapi(array : array of array of string, output : string)
+{output array dengan jarak rapi}
+
+    arrayCache : array of array of string
+    panjangMaks : integer
+    nomor : integer
+    nomorPrint : string
+
+    arrayCache <- salin(array)
+
+    output()
+    line traversal [1..panjangArray(arrayCache)]
+        anggota traversal [1..panjangArray(arrayCache[1])]
+            arrayCache[line][anggota] <- arrayCache[line][anggota] + '    '
+    
+    anggota traversal [1..panjangArray(arrayCache[1])]
+        
+        panjangMaks <- 0
+        line traversal [1..panjangArray(arrayCache)]
+            if panjangArray(arrayCache[line][anggota]) > panjangMaks then
+                panjangMaks <- panjangArray(arrayCache[line][anggota])
+        
+        line traversal [1..panjangArray(arrayCache)]
+            while panjangArray(arrayCache[line][anggota]) < panjangMaks do
+                arrayCache[line][anggota] <- arrayCache[line][anggota] + ' '
+
+    nomor <- 1
+    i traversal [1..panjangArray(arrayCache)]
+        if i = 0 then
+            output("No     ", end <- '')
+        else
+            nomorPrint <- str(nomor)
+            while panjangArray(nomorPrint) < (panjangArray("No     ")) do
+                nomorPrint <- nomorPrint + ' '
+            output(nomorPrint, end <- '')
+            nomor <- nomor + 1
+        j traversal [1..panjangArray(arrayCache[1])]
+            output(arrayCache[i][j], end <- '')
+        output('\n')
+    output('\n')
+
+
+
+{KAMUS}
+datafile : array of bool and array of array of string
+key : integer
+userArray : array of array of string
+gameArray : array of array of string
+riwayatArray : array of array of string
+kepemilikanArray : array of array of string
+userInfo : array of string
+state : string
+userid : string
+prompt : string
+saveBeforeExit : string
+
+key <- 11
+
+
+{PROGRAM UTAMA}
+datafile <- load()
+if datafile[1] then
+    userArray <- datafile[2]
+    gameArray <- datafile[3]
+    riwayatArray <- datafile[4]
+    kepemilikanArray <- datafile[5]
+
+    userInfo <- login(userArray, key)
+    state <- userInfo[2]
+    userid <- userInfo[1]
+
+    while True
+        input(prompt)
+
+        if prompt = "exit" then
+            while True
+                input(saveBeforeExit)
+                if saveBeforeExit = "y" or saveBeforeExit = "Y" then
+                    save()
+                    break
+                else if saveBeforeExit = "n" or saveBeforeExit = "N" then
+                    break
+                else
+                    output("Input tidak valid.\n")
+            output("\n\nTerima kasih telah menggunakan BNMO.")
+            break
+
+        else if prompt = "save" then
+            save()
+
+        else
+            if state = 'Admin' then
+                    
+                if prompt = "register" then
+                    userArray <- register(userArray, key)
+                else if prompt = "logout" then
+                    userInfo <- login(userArray, key)
+                    state <- userInfo[2]
+                    userid <- userInfo[1]
+                else if prompt = "tambah_game" then
+                    gameArray <- tambah_game(gameArray)
+                else if prompt = "ubah_game" then
+                    gameArray <- ubah_game(gameArray)
+                else if prompt = "ubah_stok" then
+                    gameArray <- ubah_stok(gameArray)
+                else if prompt = "list_game_toko" then
+                    list_game_toko(gameArray)
+                else if prompt = 'buy_game' then
+                    output("Maaf, hanya user yang dapat melakukan hal tersebut.")
+                else if prompt = 'list_game' then
+                    output("Maaf, hanya user yang dapat melakukan hal tersebut.")
+                else if prompt = 'search_my_game' then
+                    output("Maaf, hanya user yang dapat melakukan hal tersebut.")
+                else if prompt = "search_game_at_store" then
+                    search_game_at_store(gameArray)
+                else if prompt = "topup" then
+                    userArray <- topup(userArray)
+                else if prompt = "riwayat":
+                    output("Maaf, hanya user yang dapat melakukan hal tersebut.")
+                else if prompt = "help" then
+                    help(state)
+                else if prompt = "kerangajaib" then
+                    magicConch()
+                else if prompt = "tictactoe" then
+                    tictactoe()
+                else
+                    output("Perintah tidak valid (ketik help untuk mencari command)")
+
+
+
+            else {state = 'User'}
+
+                if prompt = "logout" then
+                    userInfo <- login(userArray)
+                    state <- userInfo[2]
+                    userid <- userInfo[1]
+                else if prompt = 'tambah_game' then
+                    output("Maaf, user tidak memiliki izin untuk menjalankan perintah berikut. Mintalah ke administrator untuk melakukan hal tersebut.")
+                else if prompt = 'ubah_game' then
+                    output("Maaf, user tidak memiliki izin untuk menjalankan perintah berikut. Mintalah ke administrator untuk melakukan hal tersebut.")
+                else if prompt = 'ubah_stok' then
+                    output("Maaf, user tidak memiliki izin untuk menjalankan perintah berikut. Mintalah ke administrator untuk melakukan hal tersebut.")
+                else if prompt = "list_game_toko" then
+                    list_game_toko(gameArray)
+                else if prompt = "buy_game" then
+                    dataUpdate <- buy_game(gameArray, riwayatArray, kepemilikanArray, userArray, userid)
+                    riwayatArray <- dataUpdate[1]
+                    kepemilikanArray <- dataUpdate[2]
+                else if prompt = "list_game" then
+                    arrayMilik <- list_game(gameArray, kepemilikanArray, userid)
+                    if panjangArray(arrayMilik) /= 1 then
+                        output("Daftar game:", end='')
+                        printRapi(arrayMilik)
+                else if prompt = "search_my_game" then
+                    search_my_game(gameArray, kepemilikanArray, userid)
+                else if prompt = "search_game_at_store" then
+                    search_game_at_store(gameArray)
+                else if prompt == 'topup' then
+                    output("Maaf, user tidak memiliki izin untuk menjalankan perintah berikut. Mintalah ke administrator untuk melakukan hal tersebut.")
+                else if prompt = "riwayat" then
+                    riwayat(riwayatArray, userid)
+                else if prompt = "help" then
+                    help(state)
+                else if prompt = "kerangajaib" then
+                    magicConch()
+                else if prompt = "tictactoe" then
+                    tictactoe()
+                else
+                    output("Perintah tidak valid (ketik help untuk mencari command)")
